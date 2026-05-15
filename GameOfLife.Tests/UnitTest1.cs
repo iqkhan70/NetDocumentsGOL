@@ -98,6 +98,18 @@ public sealed class BoardApiTests : IDisposable
     }
 
     [Fact]
+    public async Task Root_ReturnsDemoUi()
+    {
+        var client = _factory.CreateClient();
+
+        var response = await client.GetAsync("/", CancellationToken.None);
+        var content = await response.Content.ReadAsStringAsync(CancellationToken.None);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("Conway's Game of Life", content);
+    }
+
+    [Fact]
     public async Task UploadAndGetNext_ReturnsNextBoardState()
     {
         var client = _factory.CreateClient();

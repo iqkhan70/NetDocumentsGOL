@@ -24,6 +24,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
 var boards = app.MapGroup("/boards").WithTags("Boards");
 
 boards.MapPost("/", async (UploadBoardRequest request, IBoardStore store, CancellationToken cancellationToken) =>

@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Conway's Game of Life Demo</title>
+    <style>
+        :root {
+            color-scheme: light;
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            --background: #f6f7fb;
+            --card: #ffffff;
+            --border: #d8deea;
+            --primary: #2257d6;
+            --primary-dark: #1645ad;
+            --text: #152033;
+            --muted: #60708a;
+            --alive: #17233c;
+            --dead: #eef2f8;
+            --error: #b42318;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: var(--background);
+            color: var(--text);
+        }
+
+        main {
+            width: min(1180px, calc(100% - 32px));
+            margin: 32px auto;
+        }
+
+        h1 {
+            margin: 0 0 8px;
+            font-size: clamp(2rem, 4vw, 3.5rem);
+            letter-spacing: -0.04em;
+        }
+
+        p {
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: minmax(320px, 420px) 1fr;
+            gap: 20px;
+            margin-top: 24px;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            box-shadow: 0 18px 60px rgb(22 31 52 / 8%);
+            padding: 20px;
+        }
+
+        .card h2 {
+            margin: 0 0 12px;
+            font-size: 1.1rem;
+        }
+
+        textarea,
+        input {
+            width: 100%;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font: inherit;
+            padding: 12px;
+        }
+
+        textarea {
+            min-height: 180px;
+            resize: vertical;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+            line-height: 1.5;
+        }
+
+        label {
+            display: block;
+            color: var(--muted);
+            font-size: 0.9rem;
+            margin: 14px 0 6px;
+        }
+
+        .actions {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        button {
+            border: 0;
+            border-radius: 12px;
+            background: var(--primary);
+            color: white;
+            cursor: pointer;
+            font: inherit;
+            font-weight: 700;
+            padding: 12px 14px;
+        }
+
+        button:hover {
+            background: var(--primary-dark);
+        }
+
+        button.secondary {
+            background: #e8edf8;
+            color: var(--text);
+        }
+
+        button.secondary:hover {
+            background: #dce4f4;
+        }
+
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.55;
+        }
+
+        .status {
+            border-radius: 12px;
+            margin-top: 16px;
+            min-height: 44px;
+            padding: 12px;
+            background: #f2f5fb;
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        .status.error {
+            background: #fff0ee;
+            color: var(--error);
+        }
+
+        .board-wrap {
+            overflow: auto;
+            padding-bottom: 4px;
+        }
+
+        .board {
+            display: inline-grid;
+            gap: 5px;
+            padding: 12px;
+            border-radius: 14px;
+            background: #dce3ef;
+        }
+
+        .cell {
+            width: 28px;
+            height: 28px;
+            border-radius: 7px;
+            border: 1px solid #c5cedd;
+            background: var(--dead);
+        }
+
+        .cell.alive {
+            border-color: var(--alive);
+            background: var(--alive);
+        }
+
+        .meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 12px 0 16px;
+        }
+
+        .pill {
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            color: var(--muted);
+            padding: 6px 10px;
+            font-size: 0.9rem;
+        }
+
+        pre {
+            overflow: auto;
+            margin: 16px 0 0;
+            padding: 14px;
+            border-radius: 12px;
+            background: #111827;
+            color: #d1d5db;
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 860px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<main>
+    <header>
+        <h1>Conway's Game of Life</h1>
+        <p>Demo UI for the API. Upload a board with <strong>#</strong> for live cells and <strong>.</strong> for dead cells, then calculate the next, future, or final stable state.</p>
+    </header>
+
+    <section class="layout">
+        <div class="card">
+            <h2>Board Input</h2>
+            <label for="rowsInput">Rows</label>
+            <textarea id="rowsInput" spellcheck="false">.....
+..#..
+..#..
+..#..
+.....</textarea>
+
+            <div class="actions">
+                <button id="uploadButton">Upload Board</button>
+                <button id="originalButton" class="secondary" disabled>Original</button>
+                <button id="nextButton" class="secondary" disabled>Next State</button>
+                <button id="finalButton" class="secondary" disabled>Final State</button>
+            </div>
+
+            <label for="generationsInput">Generations away</label>
+            <input id="generationsInput" type="number" min="0" value="5">
+            <button id="generationsButton" style="margin-top: 10px;" disabled>Get N Generations Away</button>
+
+            <label for="maxAttemptsInput">Final state max attempts</label>
+            <input id="maxAttemptsInput" type="number" min="0" value="100">
+
+            <div id="status" class="status">Upload a board to begin.</div>
+        </div>
+
+        <div class="card">
+            <h2>Board Output</h2>
+            <div id="meta" class="meta"></div>
+            <div class="board-wrap">
+                <div id="board" class="board" aria-label="Game board"></div>
+            </div>
+            <pre id="jsonOutput">{}</pre>
+        </div>
+    </section>
+</main>
+
+<script>
+    const rowsInput = document.querySelector("#rowsInput");
+    const uploadButton = document.querySelector("#uploadButton");
+    const originalButton = document.querySelector("#originalButton");
+    const nextButton = document.querySelector("#nextButton");
+    const finalButton = document.querySelector("#finalButton");
+    const generationsButton = document.querySelector("#generationsButton");
+    const generationsInput = document.querySelector("#generationsInput");
+    const maxAttemptsInput = document.querySelector("#maxAttemptsInput");
+    const statusBox = document.querySelector("#status");
+    const board = document.querySelector("#board");
+    const meta = document.querySelector("#meta");
+    const jsonOutput = document.querySelector("#jsonOutput");
+
+    let boardId = "";
+
+    uploadButton.addEventListener("click", uploadBoard);
+    originalButton.addEventListener("click", () => loadBoard(`/boards/${boardId}`));
+    nextButton.addEventListener("click", () => loadBoard(`/boards/${boardId}/next`));
+    generationsButton.addEventListener("click", () => {
+        const generations = Number.parseInt(generationsInput.value, 10);
+        loadBoard(`/boards/${boardId}/states/${generations}`);
+    });
+    finalButton.addEventListener("click", () => {
+        const maxAttempts = Number.parseInt(maxAttemptsInput.value, 10);
+        loadBoard(`/boards/${boardId}/final?maxAttempts=${maxAttempts}`);
+    });
+
+    async function uploadBoard() {
+        try {
+            setStatus("Uploading board...");
+            const rows = rowsInput.value
+                .split(/\r?\n/)
+                .map(row => row.trim())
+                .filter(row => row.length > 0);
+
+            const response = await fetch("/boards", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ rows })
+            });
+
+            const payload = await readPayload(response);
+            if (!response.ok) {
+                throw new Error(payload.error ?? "Upload failed.");
+            }
+
+            boardId = payload.id;
+            enableBoardActions();
+            setStatus(`Uploaded board ${boardId}.`);
+            await loadBoard(`/boards/${boardId}`);
+        } catch (error) {
+            setStatus(error.message, true);
+        }
+    }
+
+    async function loadBoard(path) {
+        try {
+            setStatus("Loading board state...");
+            const response = await fetch(path);
+            const payload = await readPayload(response);
+            if (!response.ok) {
+                throw new Error(payload.error ?? "Request failed.");
+            }
+
+            renderBoard(payload);
+            setStatus(`Showing generation ${payload.generation}.`);
+        } catch (error) {
+            setStatus(error.message, true);
+        }
+    }
+
+    async function readPayload(response) {
+        const text = await response.text();
+        return text ? JSON.parse(text) : {};
+    }
+
+    function enableBoardActions() {
+        originalButton.disabled = false;
+        nextButton.disabled = false;
+        generationsButton.disabled = false;
+        finalButton.disabled = false;
+    }
+
+    function renderBoard(state) {
+        const rows = state.rows ?? [];
+        board.replaceChildren();
+        board.style.gridTemplateColumns = `repeat(${rows[0]?.length ?? 0}, 28px)`;
+
+        for (const row of rows) {
+            for (const value of row) {
+                const cell = document.createElement("div");
+                cell.className = value === "#" ? "cell alive" : "cell";
+                board.appendChild(cell);
+            }
+        }
+
+        meta.replaceChildren(
+            createPill(`Generation: ${state.generation}`),
+            createPill(`Stable: ${state.isStable ? "yes" : "no"}`),
+            createPill(`Board ID: ${state.id}`)
+        );
+        jsonOutput.textContent = JSON.stringify(state, null, 2);
+    }
+
+    function createPill(text) {
+        const pill = document.createElement("span");
+        pill.className = "pill";
+        pill.textContent = text;
+        return pill;
+    }
+
+    function setStatus(message, isError = false) {
+        statusBox.textContent = message;
+        statusBox.classList.toggle("error", isError);
+    }
+</script>
+</body>
+</html>
