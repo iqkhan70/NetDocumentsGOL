@@ -1,0 +1,919 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+2 0 obj
+<< /Length 1739 >>
+stream
+BT
+/F1 10 Tf
+50 750 Td
+14 TL
+(ARCHITECTURE AND DESIGN NOTES) Tj
+T*
+() Tj
+T*
+(This project is a .NET 9 Web API for Conway's Game of Life. It provides API endpoints,) Tj
+T*
+(persistent board storage, tests, Swagger for Development, and a small browser UI for) Tj
+T*
+(demonstration.) Tj
+T*
+() Tj
+T*
+(HIGH-LEVEL ARCHITECTURE) Tj
+T*
+() Tj
+T*
+(The application is organized into a few focused areas:) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(GameOfLife.Api/) Tj
+T*
+(  Models/) Tj
+T*
+(    BoardRequests.cs) Tj
+T*
+(  Services/) Tj
+T*
+(    BoardValidator.cs) Tj
+T*
+(    BoardStorageOptions.cs) Tj
+T*
+(    GameOfLifeEngine.cs) Tj
+T*
+(    IBoardStore.cs) Tj
+T*
+(    JsonBoardStore.cs) Tj
+T*
+(    StoredBoard.cs) Tj
+T*
+(  wwwroot/) Tj
+T*
+(    index.html) Tj
+T*
+(  Program.cs) Tj
+T*
+() Tj
+T*
+(GameOfLife.Tests/) Tj
+T*
+(  UnitTest1.cs) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(`Program.cs` is the API composition layer. It registers dependencies, configures Swagger) Tj
+T*
+(only for Development, serves the static demo UI, and maps the HTTP endpoints.) Tj
+T*
+() Tj
+T*
+(`Models/` contains the request and response DTOs used by the API.) Tj
+T*
+() Tj
+T*
+(`Services/` contains the application logic:) Tj
+T*
+() Tj
+T*
+(- `GameOfLifeEngine` handles Conway's Game of Life rules.) Tj
+T*
+(- `BoardValidator` validates and normalizes board input.) Tj
+T*
+(- `IBoardStore` defines the persistence contract.) Tj
+T*
+(- `JsonBoardStore` persists boards to disk as JSON.) Tj
+T*
+(- `BoardStorageOptions` holds persistence configuration.) Tj
+T*
+() Tj
+T*
+(`wwwroot/index.html` is a lightweight static UI. It calls the API endpoints using) Tj
+T*
+(JavaScript.) Tj
+T*
+() Tj
+T*
+(`GameOfLife.Tests` contains unit and integration tests proving the rules, persistence,) Tj
+T*
+(API behavior, and UI serving.) Tj
+ET
+endstream
+endobj
+3 0 obj
+<< /Type /Page /Parent 20 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 2 0 R >>
+endobj
+4 0 obj
+<< /Length 1263 >>
+stream
+BT
+/F1 10 Tf
+50 750 Td
+14 TL
+() Tj
+T*
+(API ENDPOINTS) Tj
+T*
+() Tj
+T*
+(The main endpoints are:) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(POST /boards) Tj
+T*
+(GET  /boards/{id}) Tj
+T*
+(GET  /boards/{id}/next) Tj
+T*
+(GET  /boards/{id}/states/{generations}) Tj
+T*
+(GET  /boards/{id}/final?maxAttempts=1000) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(`POST /boards` uploads a new board and returns the board id.) Tj
+T*
+() Tj
+T*
+(`GET /boards/{id}` returns the original uploaded board.) Tj
+T*
+() Tj
+T*
+(`GET /boards/{id}/next` returns the next generation from the original uploaded board.) Tj
+T*
+() Tj
+T*
+(`GET /boards/{id}/states/{generations}` returns the board after a requested number of) Tj
+T*
+(generations.) Tj
+T*
+() Tj
+T*
+(`GET /boards/{id}/final` attempts to find the final stable state. If the board does not) Tj
+T*
+(stabilize within `maxAttempts`, the API returns an error.) Tj
+T*
+() Tj
+T*
+(REQUEST AND RESPONSE FORMAT) Tj
+T*
+() Tj
+T*
+(The API accepts either a readable row format:) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+({) Tj
+T*
+(  "rows": [) Tj
+T*
+(    ".....",) Tj
+T*
+(    "..#..",) Tj
+T*
+(    "..#..",) Tj
+T*
+(    "..#..",) Tj
+T*
+(    ".....") Tj
+T*
+(  ]) Tj
+T*
+(}) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(Or a boolean matrix:) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+({) Tj
+T*
+(  "cells": [) Tj
+T*
+(    [false, false, false],) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 20 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 1101 >>
+stream
+BT
+/F1 10 Tf
+50 750 Td
+14 TL
+(    [false, true, false],) Tj
+T*
+(    [false, false, false]) Tj
+T*
+(  ]) Tj
+T*
+(}) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(The API returns board states with both formats:) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+({) Tj
+T*
+(  "id": "00000000-0000-0000-0000-000000000000",) Tj
+T*
+(  "generation": 1,) Tj
+T*
+(  "cells": [) Tj
+T*
+(    [false, false, false],) Tj
+T*
+(    [true, true, true],) Tj
+T*
+(    [false, false, false]) Tj
+T*
+(  ],) Tj
+T*
+(  "isStable": false,) Tj
+T*
+(  "rows": [) Tj
+T*
+(    "...",) Tj
+T*
+(    "###",) Tj
+T*
+(    "...") Tj
+T*
+(  ]) Tj
+T*
+(}) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(UPLOAD FLOW) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(Client / Swagger / Demo UI) Tj
+T*
+(        |) Tj
+T*
+(        v) Tj
+T*
+(POST /boards) Tj
+T*
+(        |) Tj
+T*
+(        v) Tj
+T*
+(UploadBoardRequest) Tj
+T*
+(        |) Tj
+T*
+(        v) Tj
+T*
+(BoardValidator.TryNormalize\(\)) Tj
+T*
+(        |) Tj
+T*
+(        |-- accepts rows: "." and "#") Tj
+T*
+(        |-- accepts cells: bool[][]) Tj
+T*
+(        |-- validates rectangular shape) Tj
+T*
+(        v) Tj
+T*
+(JsonBoardStore.CreateAsync\(\)) Tj
+T*
+(        |) Tj
+T*
+(        v) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 20 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 1018 >>
+stream
+BT
+/F1 10 Tf
+50 750 Td
+14 TL
+(GameOfLife.Api/Data/boards.json) Tj
+T*
+(        |) Tj
+T*
+(        v) Tj
+T*
+(BoardCreatedResponse { id }) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(The upload endpoint does not calculate a new state. It only validates, normalizes,) Tj
+T*
+(stores the board, and returns an id.) Tj
+T*
+() Tj
+T*
+(NEXT STATE FLOW) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(Client / Swagger / Demo UI) Tj
+T*
+(        |) Tj
+T*
+(        v) Tj
+T*
+(GET /boards/{id}/next) Tj
+T*
+(        |) Tj
+T*
+(        v) Tj
+T*
+(JsonBoardStore.GetAsync\(id\)) Tj
+T*
+(        |) Tj
+T*
+(        v) Tj
+T*
+(GameOfLifeEngine.Next\(cells\)) Tj
+T*
+(        |) Tj
+T*
+(        v) Tj
+T*
+(BoardStateResponse) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(`/next` calculates one generation from the original uploaded board.) Tj
+T*
+() Tj
+T*
+(For a blinker pattern:) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(.....) Tj
+T*
+(..#..) Tj
+T*
+(..#..) Tj
+T*
+(..#..) Tj
+T*
+(.....) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(The next state becomes:) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(.....) Tj
+T*
+(.....) Tj
+T*
+(.###.) Tj
+T*
+(.....) Tj
+T*
+(.....) Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 20 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 8 0 R >>
+endobj
+10 0 obj
+<< /Length 1023 >>
+stream
+BT
+/F1 10 Tf
+50 750 Td
+14 TL
+() Tj
+T*
+() Tj
+T*
+(N GENERATIONS FLOW) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(Client / Swagger / Demo UI) Tj
+T*
+(        |) Tj
+T*
+(        v) Tj
+T*
+(GET /boards/{id}/states/{generations}) Tj
+T*
+(        |) Tj
+T*
+(        v) Tj
+T*
+(JsonBoardStore.GetAsync\(id\)) Tj
+T*
+(        |) Tj
+T*
+(        v) Tj
+T*
+(GameOfLifeEngine.Advance\(cells, generations\)) Tj
+T*
+(        |) Tj
+T*
+(        |-- repeatedly calls Next\(\)) Tj
+T*
+(        v) Tj
+T*
+(BoardStateResponse) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(This is the endpoint to use when you want recursive generation behavior.) Tj
+T*
+() Tj
+T*
+(For example, a blinker becomes horizontal after one generation and vertical again after) Tj
+T*
+(two generations:) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(Generation 0:) Tj
+T*
+(.....) Tj
+T*
+(..#..) Tj
+T*
+(..#..) Tj
+T*
+(..#..) Tj
+T*
+(.....) Tj
+T*
+() Tj
+T*
+(Generation 1:) Tj
+T*
+(.....) Tj
+T*
+(.....) Tj
+T*
+(.###.) Tj
+T*
+(.....) Tj
+T*
+(.....) Tj
+T*
+() Tj
+T*
+(Generation 2:) Tj
+T*
+(.....) Tj
+T*
+(..#..) Tj
+T*
+(..#..) Tj
+T*
+(..#..) Tj
+T*
+(.....) Tj
+ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 20 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 10 0 R >>
+endobj
+12 0 obj
+<< /Length 1417 >>
+stream
+BT
+/F1 10 Tf
+50 750 Td
+14 TL
+() Tj
+T*
+() Tj
+T*
+(FINAL STATE FLOW) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(Client / Swagger / Demo UI) Tj
+T*
+(        |) Tj
+T*
+(        v) Tj
+T*
+(GET /boards/{id}/final?maxAttempts=1000) Tj
+T*
+(        |) Tj
+T*
+(        v) Tj
+T*
+(JsonBoardStore.GetAsync\(id\)) Tj
+T*
+(        |) Tj
+T*
+(        v) Tj
+T*
+(GameOfLifeEngine.TryFindFinalState\(cells, maxAttempts\)) Tj
+T*
+(        |) Tj
+T*
+(        |-- calculate next generation) Tj
+T*
+(        |-- compare current and next state) Tj
+T*
+(        |-- stop if stable) Tj
+T*
+(        |-- return error if maxAttempts is reached) Tj
+T*
+(        v) Tj
+T*
+(BoardStateResponse or ErrorResponse) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(A final state means the next generation is identical to the current generation.) Tj
+T*
+(Oscillating boards, like a blinker, do not become final because they keep changing.) Tj
+T*
+() Tj
+T*
+(PERSISTENCE) Tj
+T*
+() Tj
+T*
+(Boards are stored in:) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(GameOfLife.Api/Data/boards.json) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(This lets the API restart and still retain uploaded boards. The `Data` folder is ignored) Tj
+T*
+(by git because it is runtime data.) Tj
+T*
+() Tj
+T*
+(The store writes to a temporary file first and then replaces the real file. This reduces) Tj
+T*
+(the chance of corrupting the stored boards during a write.) Tj
+T*
+() Tj
+T*
+(DEMO UI FLOW) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(Browser opens /) Tj
+T*
+(        |) Tj
+T*
+(        v) Tj
+ET
+endstream
+endobj
+13 0 obj
+<< /Type /Page /Parent 20 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 12 0 R >>
+endobj
+14 0 obj
+<< /Length 1671 >>
+stream
+BT
+/F1 10 Tf
+50 750 Td
+14 TL
+(wwwroot/index.html loads) Tj
+T*
+(        |) Tj
+T*
+(        v) Tj
+T*
+(User enters rows using "." and "#") Tj
+T*
+(        |) Tj
+T*
+(        v) Tj
+T*
+(Upload Board button calls POST /boards) Tj
+T*
+(        |) Tj
+T*
+(        v) Tj
+T*
+(UI stores returned board id) Tj
+T*
+(        |) Tj
+T*
+(        v) Tj
+T*
+(Buttons call:) Tj
+T*
+(  - GET /boards/{id}) Tj
+T*
+(  - GET /boards/{id}/next) Tj
+T*
+(  - GET /boards/{id}/states/{generations}) Tj
+T*
+(  - GET /boards/{id}/final?maxAttempts={value}) Tj
+T*
+(        |) Tj
+T*
+(        v) Tj
+T*
+(UI renders visual grid and JSON response) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(The UI is intentionally static and simple. It demonstrates the API without adding a) Tj
+T*
+(separate frontend framework or build step.) Tj
+T*
+() Tj
+T*
+(SOLID PRINCIPLES) Tj
+T*
+() Tj
+T*
+(SINGLE RESPONSIBILITY PRINCIPLE) Tj
+T*
+() Tj
+T*
+(Each major class has one primary responsibility:) Tj
+T*
+() Tj
+T*
+(- `GameOfLifeEngine` calculates board states.) Tj
+T*
+(- `BoardValidator` validates and parses board inputs.) Tj
+T*
+(- `JsonBoardStore` handles JSON file persistence.) Tj
+T*
+(- `Program.cs` wires HTTP endpoints to services.) Tj
+T*
+(- `BoardStateResponse` represents output data.) Tj
+T*
+() Tj
+T*
+(This keeps the code easier to test and reason about.) Tj
+T*
+() Tj
+T*
+(OPEN/CLOSED PRINCIPLE) Tj
+T*
+() Tj
+T*
+(The persistence layer is behind `IBoardStore`. The API can be extended with another) Tj
+T*
+(storage option, such as SQLite, Postgres, or cloud storage, without rewriting the) Tj
+T*
+(endpoint logic.) Tj
+T*
+() Tj
+T*
+(For example, a future `SqlBoardStore` could implement `IBoardStore` and be registered in) Tj
+T*
+(dependency injection.) Tj
+ET
+endstream
+endobj
+15 0 obj
+<< /Type /Page /Parent 20 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 14 0 R >>
+endobj
+16 0 obj
+<< /Length 1718 >>
+stream
+BT
+/F1 10 Tf
+50 750 Td
+14 TL
+() Tj
+T*
+(LISKOV SUBSTITUTION PRINCIPLE) Tj
+T*
+() Tj
+T*
+(The endpoints depend on the `IBoardStore` interface. Any implementation of `IBoardStore`) Tj
+T*
+(should be usable by the API as long as it honors the same contract:) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(CreateAsync\(...\)) Tj
+T*
+(GetAsync\(...\)) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(This allows `JsonBoardStore` to be replaced without changing the endpoint behavior.) Tj
+T*
+() Tj
+T*
+(INTERFACE SEGREGATION PRINCIPLE) Tj
+T*
+() Tj
+T*
+(`IBoardStore` is intentionally small. It only exposes the operations the API needs:) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(Task<Guid> CreateAsync\(bool[][] cells, CancellationToken cancellationToken\);) Tj
+T*
+(Task<StoredBoard?> GetAsync\(Guid id, CancellationToken cancellationToken\);) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(It does not force unrelated methods like update, delete, search, or pagination.) Tj
+T*
+() Tj
+T*
+(DEPENDENCY INVERSION PRINCIPLE) Tj
+T*
+() Tj
+T*
+(The API does not manually construct its dependencies inside each endpoint. Dependencies) Tj
+T*
+(are registered with .NET dependency injection:) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(builder.Services.AddSingleton<GameOfLifeEngine>\(\);) Tj
+T*
+(builder.Services.AddSingleton<IBoardStore, JsonBoardStore>\(\);) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(Then the endpoints receive services as parameters. This keeps the API layer loosely) Tj
+T*
+(coupled and easier to test.) Tj
+T*
+() Tj
+T*
+(COMPLETENESS) Tj
+T*
+() Tj
+T*
+(The project includes tests for:) Tj
+T*
+() Tj
+T*
+(- Conway's Game of Life rule behavior.) Tj
+T*
+(- Stable final state detection.) Tj
+T*
+(- JSON persistence across store instances.) Tj
+T*
+(- API upload behavior.) Tj
+T*
+(- Next-state behavior.) Tj
+T*
+(- Readable `rows` response format.) Tj
+ET
+endstream
+endobj
+17 0 obj
+<< /Type /Page /Parent 20 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 16 0 R >>
+endobj
+18 0 obj
+<< /Length 247 >>
+stream
+BT
+/F1 10 Tf
+50 750 Td
+14 TL
+(- Final-state error behavior.) Tj
+T*
+(- Demo UI serving from `/`.) Tj
+T*
+() Tj
+T*
+(Run all tests with:) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(dotnet test) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(The expected result is that all tests pass.) Tj
+ET
+endstream
+endobj
+19 0 obj
+<< /Type /Page /Parent 20 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 18 0 R >>
+endobj
+20 0 obj
+<< /Type /Pages /Kids [3 0 R 5 0 R 7 0 R 9 0 R 11 0 R 13 0 R 15 0 R 17 0 R 19 0 R] /Count 9 >>
+endobj
+21 0 obj
+<< /Type /Catalog /Pages 20 0 R >>
+endobj
+xref
+0 22
+0000000000 65535 f 
+0000000009 00000 n 
+0000000079 00000 n 
+0000001870 00000 n 
+0000001997 00000 n 
+0000003312 00000 n 
+0000003439 00000 n 
+0000004592 00000 n 
+0000004719 00000 n 
+0000005789 00000 n 
+0000005916 00000 n 
+0000006992 00000 n 
+0000007121 00000 n 
+0000008591 00000 n 
+0000008720 00000 n 
+0000010444 00000 n 
+0000010573 00000 n 
+0000012344 00000 n 
+0000012473 00000 n 
+0000012772 00000 n 
+0000012901 00000 n 
+0000013012 00000 n 
+trailer
+<< /Size 22 /Root 21 0 R >>
+startxref
+13063
+%%EOF
