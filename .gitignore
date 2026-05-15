@@ -1,0 +1,15 @@
+bin/
+obj/
+lib/
+
+.vs/
+.vscode/
+*.user
+*.suo
+
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+
+GameOfLife.Api/Data/
