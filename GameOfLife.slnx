@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="GameOfLife.Api/GameOfLife.Api.csproj" />
+  <Project Path="GameOfLife.Tests/GameOfLife.Tests.csproj" />
+</Solution>
